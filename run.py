@@ -10,6 +10,7 @@ default_colour = "#fc752b"
 class Border(ttk.Frame):
     def __init__(self, master, bordercolor=None, borderleft=0, bordertop=0, borderright=0, borderbottom=0, interiorwidget=tk.Frame, **kwargs):
         tk.Frame.__init__(self, master, background=bordercolor, bd=0, highlightthickness=0)
+        self.parent = master
         self.interior = interiorwidget(self)
         self.interior.grid(padx=(borderleft, borderright), pady=(bordertop, borderbottom))
         self.grid(**kwargs)
@@ -17,8 +18,7 @@ class Border(ttk.Frame):
 class TheMove(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.waiting = ImageTk.PhotoImage(Image.open("Waiting.png"))
-        self.image = tk.Label(self, image=self.waiting, width=446, height=396, bg="#00d0d4") #IMAGE SHOULD BE 450X400
+        self.image = tk.Label(self, image=parent.parent.parent.waiting, width=446, height=396, bg="#00d0d4") #IMAGE SHOULD BE 450X400
 
 class Button_Card(tk.Frame):
     def __init__(self, parent, Name, clicks, index, disabled = False, *args, **kwargs):
@@ -49,6 +49,7 @@ class Button_Card(tk.Frame):
 class Player(tk.Frame):
     def __init__(self,parent,*args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
         self.Human = Border(self, "#ff9961", borderright=4, borderbottom=8, interiorwidget=TheMove, row=1, column=0).interior
         self.Human.image.pack(fill="both", padx=(20,10),pady=(10,30))
         self.Human.config(bg=default_colour)
@@ -75,10 +76,16 @@ class PSRLS(tk.Frame):
 
         try:
             self.MovesImgs = [ImageTk.PhotoImage(Image.open(move+".png")) for move in self.Moves]
+            self.help = tk.Label(self, image=ImageTk.PhotoImage(Image.open("i_icon.png")))
+            self.help = tk.Label(self, image=ImageTk.PhotoImage(Image.open("setting_icon.png")))
+            self.waiting = ImageTk.PhotoImage(Image.open("Waiting.png"))
         except:
             import urllib.request as urllib
             import io
-            self.MovesImgs = [ImageTk.PhotoImage(Image.open(io.BytesIO(urllib.urlopen("https://rpsls.net/images/"+move+".png").read()))) for move in self.Moves]
+            self.MovesImgs = [ImageTk.PhotoImage(Image.open(io.BytesIO(urllib.urlopen("https://raw.githubusercontent.com/James712346/Rock-Paper-Scissors-and-the-Bang/master/"+move+".png").read()))) for move in self.Moves]
+            self.help = ImageTk.PhotoImage(Image.open(io.BytesIO(urllib.urlopen("https://raw.githubusercontent.com/James712346/Rock-Paper-Scissors-and-the-Bang/master/i_icon.png").read())))
+            self.settings = ImageTk.PhotoImage(Image.open(io.BytesIO(urllib.urlopen("https://raw.githubusercontent.com/James712346/Rock-Paper-Scissors-and-the-Bang/master/setting_icon.png").read())))
+            self.waiting = ImageTk.PhotoImage(Image.open(io.BytesIO(urllib.urlopen("https://raw.githubusercontent.com/James712346/Rock-Paper-Scissors-and-the-Bang/master/Waiting.png").read())))
         self.TimeofWin = 0
         self.parent = parent
         tk.Frame.__init__(self, parent, *args, **kwargs)
@@ -88,6 +95,7 @@ class PSRLS(tk.Frame):
         __tempvar2.place(rely=1, relx=0, anchor="sw")
         self.Player = Player(self)
         self.Player.place(rely=0.5, relx=0.5, anchor="center")
+
         self.Player.Human.Buttons = [Button_Card(self, move, humtall[self.Moves.index(move)], self.Moves.index(move)) for move in self.Moves]
         self.Player.Human.Title = tk.Label(self, text="Human",fg="White",bg=default_colour, font=("Arial", 20))
         self.Player.Human.Title.place(y=105, relx=0.5 ,anchor="center",)
@@ -99,6 +107,7 @@ class PSRLS(tk.Frame):
         self.Player.Computer.Title.place(y=-105, rely=1, relx=0.5 ,anchor="center")
         [Button.place(relx=(1/len(self.Moves)*self.Player.Computer.Buttons.index(Button))+1/len(self.Moves)/2, rely=1, y=-80, anchor="n")for Button in self.Player.Computer.Buttons]
         [self.parent.bind(self.Binds[i],self.Player.Human.Buttons[i].Play) for i in range(0,len(self.Moves))]
+
         self.parent.protocol("WM_DELETE_WINDOW", self.close)
     def Play(self, Human):
         Computer = random.randint(0,len(self.Moves)-1)
@@ -124,8 +133,8 @@ class PSRLS(tk.Frame):
             localTimeofWin = time.time()
             while time.time() <= self.TimeofWin+5 and self.TimeofWin == localTimeofWin:
                 self.parent.update() #Added this so the game won't freeze when waiting for 5 seconds
-            self.Player.Computer.image.config(image=self.Player.Computer.waiting)
-            self.Player.Human.image.config(image=self.Player.Human.waiting)
+            self.Player.Computer.image.config(image=self.waiting)
+            self.Player.Human.image.config(image=self.waiting)
         elif (len(self.Moves) + Human - Computer)%len(self.Moves)%2:
             print(self.Moves[Human],"->",self.Moves[Computer]) #win
             self.Winner(self.Player.Human)
@@ -151,8 +160,8 @@ class PSRLS(tk.Frame):
             loser.config(bg=default_colour)
             loser.Background.config(bg=default_colour)
             loser.Title.config(bg=default_colour)
-            loser.image.config(image=loser.waiting)
-            winner.image.config(image=winner.waiting)
+            loser.image.config(image=self.waiting)
+            winner.image.config(image=self.waiting)
             print("Clearing...")
     def close(self):
         self.TimeofWin = time.time()
