@@ -124,8 +124,9 @@ class PSRLS(tk.Frame):
             file.write(str(self.Player.Human.wins)+","+str(self.Player.Computer.wins)+"\n")
             file.write(",".join(self.Binds))
             file.close()
-        self.Player.Human.winper.set(int(round(self.Player.Human.wins / (self.Player.Human.wins+self.Player.Computer.wins),2)*100))
-        self.Player.Computer.winper.set(int(round(self.Player.Computer.wins / (self.Player.Human.wins+self.Player.Computer.wins),2)*100))
+        if self.Player.Human.wins+self.Player.Computer.wins:
+            self.Player.Human.winper.set(int(round(self.Player.Human.wins / (self.Player.Human.wins+self.Player.Computer.wins),2)*100))
+            self.Player.Computer.winper.set(int(round(self.Player.Computer.wins / (self.Player.Human.wins+self.Player.Computer.wins),2)*100))
     def Play(self, Human):
         Computer = random.randint(0,len(self.Moves)-1)
         self.Player.Human.image.config(image=self.MovesImgs[Human])
