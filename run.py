@@ -19,6 +19,7 @@ class TheMove(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.image = tk.Label(self, image=parent.parent.parent.waiting, width=446, height=396, bg="#00d0d4") #IMAGE SHOULD BE 450X400
+        self.winper = tk.IntVar()
 
 class Button_Card(tk.Frame):
     def __init__(self, parent, Name, clicks, index, disabled = False, *args, **kwargs):
@@ -66,13 +67,16 @@ class PSRLS(tk.Frame):
             with open("psrls.txt","w") as file:
                 file.write("0,0,0,0,0\n")
                 file.write("0,0,0,0,0\n")
+                file.write("0,0\n")
                 file.write("1,2,3,4,5")
                 file.close()
         with open("psrls.txt","r") as file:
             file = file.readlines()
             humtall = [int(tall) for tall in file[0].strip().split(",")]
             comtall = [int(tall) for tall in file[1].strip().split(",")]
-            self.Binds = file[2].strip().split(",")
+            winstats = file[2].strip().split(",")
+            self.Binds = file[3].strip().split(",")
+
 
         try:
             self.MovesImgs = [ImageTk.PhotoImage(Image.open(move+".png")) for move in self.Moves]
@@ -95,34 +99,43 @@ class PSRLS(tk.Frame):
         __tempvar2.place(rely=1, relx=0, anchor="sw")
         self.Player = Player(self)
         self.Player.place(rely=0.5, relx=0.5, anchor="center")
-
         self.Player.Human.Buttons = [Button_Card(self, move, humtall[self.Moves.index(move)], self.Moves.index(move)) for move in self.Moves]
         self.Player.Human.Title = tk.Label(self, text="Human",fg="White",bg=default_colour, font=("Arial", 20))
-        self.Player.Human.Title.place(y=105, relx=0.5 ,anchor="center",)
+        self.Player.Human.Title.place(y=105, relx=0.5 ,anchor="center")
+        tk.Label(self, textvariable=self.Player.Human.winper, font=("Arial", 20), width=4).place(y=145, relx=0.5 ,anchor="center")
+        self.Player.Human.wins = int(winstats[0])
+
         [Button.place(relx=(1/len(self.Moves)*self.Player.Human.Buttons.index(Button))+1/len(self.Moves)/2, y=10, anchor="n") for Button in self.Player.Human.Buttons]
         self.Player.Human.Background = __tempvar1
         self.Player.Computer.Background = __tempvar2
         self.Player.Computer.Buttons = [Button_Card(self, move, comtall[self.Moves.index(move)], self.Moves.index(move), disabled =True) for move in self.Moves]
         self.Player.Computer.Title = tk.Label(self, text="Computer",fg="White",bg=default_colour, font=("Arial", 20))
         self.Player.Computer.Title.place(y=-105, rely=1, relx=0.5 ,anchor="center")
+        tk.Label(self, textvariable=self.Player.Computer.winper, font=("Arial", 20), width=4).place(y=-145, rely=1, relx=0.5 ,anchor="center")
+        self.Player.Computer.wins = int(winstats[1])
         [Button.place(relx=(1/len(self.Moves)*self.Player.Computer.Buttons.index(Button))+1/len(self.Moves)/2, rely=1, y=-80, anchor="n")for Button in self.Player.Computer.Buttons]
         [self.parent.bind(self.Binds[i],self.Player.Human.Buttons[i].Play) for i in range(0,len(self.Moves))]
-
+        self.updatefile()
         self.parent.protocol("WM_DELETE_WINDOW", self.close)
+    def updatefile(self):
+        with open("psrls.txt","w") as file:
+            file.write(",".join([str(tall.Clicks.config()["text"][-1]) for tall in self.Player.Human.Buttons])+"\n")
+            file.write(",".join([str(tall.Clicks.config()["text"][-1]) for tall in self.Player.Computer.Buttons])+"\n")
+            file.write(str(self.Player.Human.wins)+","+str(self.Player.Computer.wins)+"\n")
+            file.write(",".join(self.Binds))
+            file.close()
+        self.Player.Human.winper.set(int(round(self.Player.Human.wins / (self.Player.Human.wins+self.Player.Computer.wins),2)*100))
+        self.Player.Computer.winper.set(int(round(self.Player.Computer.wins / (self.Player.Human.wins+self.Player.Computer.wins),2)*100))
     def Play(self, Human):
         Computer = random.randint(0,len(self.Moves)-1)
         self.Player.Human.image.config(image=self.MovesImgs[Human])
         self.Player.Computer.image.config(image=self.MovesImgs[Computer])
         self.Player.Computer.Buttons[Computer].add1()
         self.Player.Human.Buttons[Human].add1()
-        with open("psrls.txt","w") as file:
-            file.write(",".join([str(tall.Clicks.config()["text"][-1]) for tall in self.Player.Human.Buttons])+"\n")
-            file.write(",".join([str(tall.Clicks.config()["text"][-1]) for tall in self.Player.Computer.Buttons])+"\n")
-            file.write(",".join(self.Binds))
-            file.close()
         if not (len(self.Moves) + Human - Computer)%len(self.Moves):
             print(self.Moves[Human],"-",self.Moves[Computer])
             #self.winlosetext.config(text="Draw")
+            self.updatefile()
             self.Player.Human.config(bg=default_colour)
             self.Player.Human.Background.config(bg=default_colour)
             self.Player.Computer.config(bg=default_colour)
@@ -141,10 +154,13 @@ class PSRLS(tk.Frame):
         else:
             print(self.Moves[Human],"<-",self.Moves[Computer]) #loss
             self.Winner(self.Player.Computer)
+
     def Winner(self,winner):
         loser = self.Player.Computer if winner == self.Player.Human else self.Player.Human
         self.TimeofWin = time.time()
         localTimeofWin = time.time()
+        winner.wins+=1
+        self.updatefile()
         winner.config(bg="Green")
         winner.Background.config(bg="Green")
         winner.Title.config(bg="Green")
@@ -170,7 +186,7 @@ class PSRLS(tk.Frame):
 if __name__ == "__main__":
     root = tk.Tk()
     root.maxsize(960,800)
-    root.minsize(960,700)
+    root.minsize(960,800)
     root.title("Rock, Paper, Scissors, and the Bang")
     PSRLS(root).pack( fill="both", expand=True)
     root.mainloop()
