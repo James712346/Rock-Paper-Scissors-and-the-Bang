@@ -17,12 +17,13 @@ except:
 Moves =  ["Rock","Paper","Scissors", "Spock", "Lizard"] # make a Global list of moves
 
 class Move(tk.Frame):
-    def __init__(self,parent,name,index,bind,image,tall = 0,disabled = False, *args, **kwargs):
+    def __init__(self,parent,name,index,bind=None,image=None, tall = 0,Computer = False, *args, **kwargs):
         _colour = ["Brown","White","pink","green2","LightBlue1"]
         tk.Frame.__init__(self, parent,bg= _colour[index],width=50, *args, **kwargs) #Setup the main Frame (Class, root, background colour, width, [and any other arguments that could be called])
         self.Parent = parent
         self.index = index
         self.image = image
+        self.keybind = bind
         self.Tall = tk.IntVar()
         self.Tall.set(tall)
         self.Title = ttk.Label(self, text=name, background=_colour[index],width=10,font=("Times", 20, "bold"), anchor='center')
@@ -30,28 +31,31 @@ class Move(tk.Frame):
         self.Title.pack()
         self.Tall_Label.pack()
         self.Hover = False
-        if not disabled:
-            self.config(bd=2,relief="raised")
-            self.bind('<Enter>', self.hover)
+        if not Computer: #check if its the human's or computer's buttons (True means its a computer and Flase means thats its a Humans)
+            self.config(bd=2,relief="raised") #if it is the human's buttons then i enables the functions of click, hovering and keybinds
+            self.Parent.bind(self.keybind, self.Play)
+            self.bind('<Enter>', self.Entry)
             self.bind('<Leave>', self.Exit)
-            [i.bind('<Button-1>', self.play) for i in [self, self.Title, self.Tall_Label]]
-    def hover(self, Event):
-        self.Hover = True
-        self.Parent.Wait(0.05)
-        if self.Hover and "raised" in self.config()["relief"]:
-            self.config(relief="sunken", bd=2,width=50)
+            [i.bind('<Button-1>', self.Play) for i in [self, self.Title, self.Tall_Label]]
+            self.place(relx=(1/len(Moves)*self.index)+1/len(Moves)/2,anchor="n", y=10)
+        else:
+            self.place(relx=(1/len(Moves)*self.index)+1/len(Moves)/2,anchor="n",rely=1, y=-80)
+    def Entry(self, Event):
+        self.Parent.Wait(0.05) #Giving the program time to catch up with the user by adding a delay to this event
+        if "raised" in self.config()["relief"]: #if the relief configuration is set to raised then contiune
+            self.config(relief="sunken", bd=2,width=50) #this makes sure that its not configuring the relief to the same value as i had some problem when it did
 
     def Exit(self, Event):
-        self.Hover = False
-        self.Parent.Wait(0.05)
-        if (not self.Hover) and "sunken" in self.config()["relief"]:
-            self.config(relief="raised", bd=2,width=50)
-    def play(self, Event):
+        self.Parent.Wait(0.05) #Giving the program time to catch up with the user by adding a delay to this event
+        if "sunken" in self.config()["relief"]: #if the relief configuration is set to sunken then contiune
+            self.config(relief="raised", bd=2,width=50) #this makes sure that its not configuring the relief to the same value as i had some problem when it did
+    def Play(self, Event):
         pass
 class Player(tk.Frame):
-    def __init__(self):
+    def __init__(self, name, tall=0, binds=None, pictures=None):
         tk.Frame.__init__(self, parent, *args, **kwargs) #Setup the main Frame (Class, root, [and any other arguments that could be called])
-
+        self.Name = name
+        self.Buttons = [Move(self, Moves[i], i, tall=tall, Computer=True) for i in range(0,5)] if binds and pictures else [Move(self, Moves[i], i, binds[i], pictures[i]) for i in range(0,5)]
 class PSRLS(tk.Frame):
     def __init__(self,parent,*args, **kwargs):
         tk.Frame.__init__(self, parent,*args, **kwargs) #Setup the main Frame (Class, root, [and any other arguments that could be called])
@@ -72,9 +76,9 @@ class PSRLS(tk.Frame):
             self.winstats = file[2].strip().split(",") #make a list out of the third line and set it to a self.winstats
             _binds = file[3].strip().split(",") #sets the last line to a temperary variable of binds
         _pictures, self.Global_Pictures = self.GetPictures() #calls a class function of GetPictures which will either grab the pictures from the local directory or from the internet (my github repository) and return two list on of the moves pictures and the other of the Global Pictures
-
-        for i in range(0,5):
-            Move(self, Moves[i], i, _binds[i], _pictures[i]).place(relx=(1/len(Moves)*i)+1/len(Moves)/2,anchor="n")
+        #__HumanBackground = tk.Label(self,bg=default_colour, height=20, width=960) #this needs to be called first due to
+        #__ComputerBackground = tk.Label(self,bg=default_colour, height=20, width=960)
+        self.Human = Player("Human", _)
 
     def Wait(self, t, Global=False):
         if Global:
