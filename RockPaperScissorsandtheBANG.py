@@ -31,7 +31,7 @@ class Move(tk.Frame):
         self.Tall_Label.pack()
         self.Hover = False
         if not disabled:
-            self.config(bd=1,relief="raised")
+            self.config(bd=2,relief="raised")
             self.bind('<Enter>', self.hover)
             self.bind('<Leave>', self.Exit)
             [i.bind('<Button-1>', self.play) for i in [self, self.Title, self.Tall_Label]]
@@ -39,13 +39,13 @@ class Move(tk.Frame):
         self.Hover = True
         self.Parent.Wait(0.05)
         if self.Hover and "raised" in self.config()["relief"]:
-            self.config(relief="sunken", bd=1,width=50)
+            self.config(relief="sunken", bd=2,width=50)
 
     def Exit(self, Event):
         self.Hover = False
         self.Parent.Wait(0.05)
         if (not self.Hover) and "sunken" in self.config()["relief"]:
-            self.config(relief="raised", bd=1,width=50)
+            self.config(relief="raised", bd=2,width=50)
     def play(self, Event):
         pass
 class Player(tk.Frame):
@@ -74,8 +74,8 @@ class PSRLS(tk.Frame):
         _pictures, self.Global_Pictures = self.GetPictures() #calls a class function of GetPictures which will either grab the pictures from the local directory or from the internet (my github repository) and return two list on of the moves pictures and the other of the Global Pictures
 
         for i in range(0,5):
-            Move(self, Moves[i], i, _binds[i], _pictures[i]).pack()
-            
+            Move(self, Moves[i], i, _binds[i], _pictures[i]).place(relx=(1/len(Moves)*i)+1/len(Moves)/2,anchor="n")
+
     def Wait(self, t, Global=False):
         if Global:
             self.Time = time.time() + t
