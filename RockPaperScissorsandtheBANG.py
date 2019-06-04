@@ -33,7 +33,9 @@ class Move(tk.Frame):
         self.Title.pack()
         self.Tall_Label.pack()
         if bind and image: #check if its the human's or computer's buttons (no images or binds means its a computer but if there are binds and images then thats means its a Humans)
-            self.backup = copy.copy(self) #copying the frame of this class
+            self.backup = tk.Frame(parent.Parent,bg= _colour[index],width=50, *args, **kwargs) #Making a direct copy of the self frame
+            ttk.Label(self.backup, text=name, background=_colour[index],width=10,font=("Times", 20, "bold"), anchor='center').pack()
+            ttk.Label(self.backup, textvariable=self.Tall, background=_colour[index],font=("Times", 20, "bold"),width=10, anchor='center').pack()
             self.backup.lower(self) #lowering it below the Mainframe, this object is to helps to hind the glitch of the frame disappearing for a second when the user hovers over it
             self.config(bd=2,relief="raised") #if it is the human's buttons then i enables the functions of click, hovering and keybinds
             self.Parent.bind(self.keybind, self.Play)
@@ -55,20 +57,36 @@ class Move(tk.Frame):
             self.config(relief="raised", bd=2,width=50) #this makes sure that its not configuring the relief to the same value as i had some problem when it did
             pass
     def Play(self, Event):
+
+        self.Parent.image.config(image=self.image)
+
         pass
 
 class Player(tk.Frame):
-    def __init__(self, parent, name, tall, Background, binds=None, pictures=None, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs) #Setup the main Frame (Class, root, [and any other arguments that could be called])
+    def __init__(self, frame, parent, name, tall, binds=None, pictures=None, *args, **kwargs):
+        self.Border = tk.Frame(frame, background="#ff9961", bd=0, highlightthickness=0)
+        tk.Frame.__init__(self, self.Border, bg=default_colour, *args, **kwargs) #Setup the main Frame (Class, root, [and any other arguments that could be called])
         self.Name = name
         self.Parent = parent
-        self.Background = Background
+        self.Background = tk.Label(parent,bg=default_colour, height=20, width=960)
+        self.Background.lower(self.Border)
+        self.image = tk.Label(self, image=parent.Global_Pictures[2], width=446, height=396, bg="#00d0d4") #IMAGE SHOULD BE 450X400
+        self.win = tk.IntVar()
         if binds and pictures:
             self.Buttons = [Move(self, Moves[i], i, binds[i], pictures[i],tall[i]) for i in range(0,len(Moves))]
+            self.image.pack(fill="both", padx=(20,10),pady=(10,30))
+            self.pack(padx=(0, 4), pady=(0, 8))
             self.Background.place(relx=0)
         else:
             self.Buttons = [Move(self, Moves[i], i, tall=tall[i]) for i in range(0,len(Moves))]
+            self.image.pack(fill="both", padx=(10,20),pady=(30,10))
+            self.pack(padx=(4, 0), pady=(8, 0))
             self.Background.place(rely=1, relx=0, anchor="sw")
+
+        #setup the display feilds
+        self.pack()
+        self.Border.pack(side="left")
+
     def Background_Change(self,colour="#fc752b"):
         pass
 
@@ -92,8 +110,10 @@ class PSRLS(tk.Frame):
             self.winstats = file[2].strip().split(",") #make a list out of the third line and set it to a self.winstats
             _binds = file[3].strip().split(",") #sets the last line to a temperary variable of binds
         _pictures, self.Global_Pictures = self.GetPictures() #calls a class function of GetPictures which will either grab the pictures from the local directory or from the internet (my github repository) and return two list on of the moves pictures and the other of the Global Pictures
-        self.Human = Player(self,"Human", _humtall, tk.Label(self,bg=default_colour, height=20, width=960), _binds, _pictures)
-        self.Computer = Player(self,"Computer", _comtall, tk.Label(self,bg=default_colour, height=20, width=960))
+        PlayersFrame = tk.Frame(self)
+        self.Human = Player(PlayersFrame,self,"Human", _humtall, _binds, _pictures)
+        self.Computer = Player(PlayersFrame,self,"Computer", _comtall)
+        PlayersFrame.place(relx=0.5, rely=0.5, anchor='center')
 
     def Wait(self, t, Global=False):
         if Global:
