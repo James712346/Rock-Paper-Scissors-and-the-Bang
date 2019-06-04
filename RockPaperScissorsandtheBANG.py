@@ -4,6 +4,7 @@ from tkinter import messagebox
 import random
 import time
 import os
+import copy
 try:
     from PIL import Image, ImageTk
 except:
@@ -12,7 +13,7 @@ except:
     print("     python -m pip install Pillow")
     print("to install")
 """
-.place(relx=(1/len(self.Moves)*self.Player.Human.Buttons.index(Button))+1/len(self.Moves)/2
+self.Parent.Parent.pack_forget() <- restart the view
 """
 Moves =  ["Rock","Paper","Scissors", "Spock", "Lizard"] # make a Global list of moves
 default_colour = "#fc752b"
@@ -31,25 +32,28 @@ class Move(tk.Frame):
         self.Tall_Label = ttk.Label(self, textvariable=self.Tall, background=_colour[index],font=("Times", 20, "bold"),width=10, anchor='center')
         self.Title.pack()
         self.Tall_Label.pack()
-        self.Hover = False
         if bind and image: #check if its the human's or computer's buttons (no images or binds means its a computer but if there are binds and images then thats means its a Humans)
+            self.backup = copy.copy(self) #copying the frame of this class
+            self.backup.lower(self) #lowering it below the Mainframe, this object is to helps to hind the glitch of the frame disappearing for a second when the user hovers over it
             self.config(bd=2,relief="raised") #if it is the human's buttons then i enables the functions of click, hovering and keybinds
             self.Parent.bind(self.keybind, self.Play)
             self.bind('<Enter>', self.Entry)
             self.bind('<Leave>', self.Exit)
             [i.bind('<Button-1>', self.Play) for i in [self, self.Title, self.Tall_Label]]
             self.place(relx=(1/len(Moves)*self.index)+1/len(Moves)/2,anchor="n", y=10)
+            self.backup.place(relx=(1/len(Moves)*self.index)+1/len(Moves)/2,anchor="n", y=10)
         else:
             self.place(relx=(1/len(Moves)*self.index)+1/len(Moves)/2,anchor="n",rely=1, y=-80)
     def Entry(self, Event):
-        self.Parent.Parent.Wait(0.05) #Giving the program time to catch up with the user by adding a delay to this event
+        #self.Parent.Parent.Wait(0.1) #Giving the program time to catch up with the user by adding a delay to this event
         if "raised" in self.config()["relief"]: #if the relief configuration is set to raised then contiune
             self.config(relief="sunken", bd=2,width=50) #this makes sure that its not configuring the relief to the same value as i had some problem when it did
-
+            pass
     def Exit(self, Event):
-        self.Parent.Parent.Wait(0.05) #Giving the program time to catch up with the user by adding a delay to this event
+        #self.Parent.Parent.Wait(0.1) #Giving the program time to catch up with the user by adding a delay to this event
         if "sunken" in self.config()["relief"]: #if the relief configuration is set to sunken then contiune
             self.config(relief="raised", bd=2,width=50) #this makes sure that its not configuring the relief to the same value as i had some problem when it did
+            pass
     def Play(self, Event):
         pass
 
@@ -60,11 +64,13 @@ class Player(tk.Frame):
         self.Parent = parent
         self.Background = Background
         if binds and pictures:
-            self.Buttons = [Move(self, Moves[i], i, binds[i], pictures[i],tall[i]) for i in range(0,5)]
+            self.Buttons = [Move(self, Moves[i], i, binds[i], pictures[i],tall[i]) for i in range(0,len(Moves))]
             self.Background.place(relx=0)
         else:
-            self.Buttons = [Move(self, Moves[i], i, tall=tall[i]) for i in range(0,5)]
+            self.Buttons = [Move(self, Moves[i], i, tall=tall[i]) for i in range(0,len(Moves))]
             self.Background.place(rely=1, relx=0, anchor="sw")
+    def Background_Change(self,colour="#fc752b"):
+        pass
 
 class PSRLS(tk.Frame):
     def __init__(self,parent,*args, **kwargs):
@@ -118,8 +124,8 @@ class PSRLS(tk.Frame):
 
     def UpdateFile(self):
         with open("psrls.txt","w") as file:
-            file.write(",".join([str(tall.Clicks.config()["text"][-1]) for tall in self.Player.Human.Buttons])+"\n")
-            file.write(",".join([str(tall.Clicks.config()["text"][-1]) for tall in self.Player.Computer.Buttons])+"\n")
+            file.write(",".join([str(button.Tall.get()) for button in self.Player.Human.Buttons])+"\n")
+            file.write(",".join([str(button.Tall.get()) for button in self.Player.Computer.Buttons])+"\n")
             file.write(str(self.Player.Human.wins)+","+str(self.Player.Computer.wins)+"\n")
             file.write(",".join(self.Binds))
             file.close()
