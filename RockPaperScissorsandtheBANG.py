@@ -17,6 +17,18 @@ self.Parent.Parent.pack_forget() <- restart the view
 Moves =  ["Rock","Paper","Scissors", "Spock", "Lizard"] # make a Global list of moves
 default_colour = "#fc752b"
 
+class Settings(tk.Tk):
+    def __init__(self, parent):
+        tk.Tk.__init__(self, "Settings", "Settings")
+        self.title("Settings") #set the title of the window
+        self.maxsize(960,800) #sets the windows maxsize to 960x800
+        self.minsize(960,800) #sets the windows minsize to 960x800
+        self.Parent = parent
+        self.protocol("WM_DELETE_WINDOW", self.Exit)
+    def Exit(self):
+        self.Parent.Session = 1
+        self.destroy()
+
 class Move(tk.Frame):
     def __init__(self,parent,name,index, tall = 0, image=None, bind=None, Computer = False, *args, **kwargs):
         _colour = ["Brown","White","pink","green2","LightBlue1"]
@@ -111,6 +123,8 @@ class PSRLS(tk.Frame):
         tk.Frame.__init__(self, parent,*args, **kwargs) #Setup the main Frame (Class, root, [and any other arguments that could be called])
         self.Parent = parent # sets the root from where this class is being run from to self.parent
         self.Time = 0 # Sets self.time for the wait function to 0
+        self.Session = 1
+        self.Parent.protocol("WM_DELETE_WINDOW", self.Exit)
         if not "psrls.txt" in os.listdir(): #Check in the psrls file is in the programs directory
             #if it isn't then it makes the file
             with open("psrls.txt","w") as file:
@@ -119,6 +133,7 @@ class PSRLS(tk.Frame):
                 file.write("0,0\n") #Third line is for the wins, first value is for the human wins and second value is the computers wins
                 file.write("1,2,3,4,5") #forth and final line is the keybind that the user/program has set, deflaut is 1,2,3,4,5 (the keybinds are in the same order as the temperary move list eg first value '1' is refering to the 0th element in the move list which is "Rock")
                 file.close() #closes the file
+                #Run Help window and wait
         with open("psrls.txt","r") as file: #opens the psrls file
             file = file.readlines() #places the lines into a list
             _humtall = [int(tall) for tall in file[0].strip().split(",")] #graps the first line and puts into a list of humtall (these are temperary variables)
@@ -129,7 +144,19 @@ class PSRLS(tk.Frame):
         PlayersFrame = tk.Frame(self)
         self.Human = Player(PlayersFrame,self,"Human", _humtall, _wins[0], _pictures, _binds)
         self.Computer = Player(PlayersFrame,self,"Computer", _comtall, _wins[0], pictures=_pictures)
+        self.settingbtn = tk.Button(self, image=self.Global_Pictures[0], command=self.settings, width=60, height=60)
+        self.helpbtn = tk.Button(self, image=self.Global_Pictures[1])
+        self.settingbtn.place(relx=0.05, y=100)
         PlayersFrame.place(relx=0.5, rely=0.5, anchor='center')
+    def Exit(self):
+        if  self.Session != 1:
+            self.Session.destroy()
+        self.Parent.destroy()
+    def settings(self):
+        if self.Session == 1:
+            self.Session = Settings(self)
+        else:
+            messagebox.showerror("Session Error", "Either Help or Settings Page is alread open!")
 
     def Wait(self, t):
         _Time = time.time() + t
@@ -140,7 +167,7 @@ class PSRLS(tk.Frame):
         return self.Time == _Time
 
     def GetPictures(self):
-        _ImgNames = Moves+["i_icon","setting_icon","Waiting"] #compinds two list together (List of moves, Other Pictures) to make a temperary variable for the names of pictures that need to be added
+        _ImgNames = Moves+["setting_icon","i_icon","Waiting"] #compinds two list together (List of moves, Other Pictures) to make a temperary variable for the names of pictures that need to be added
         _ImgObjects = [] #temperary variable for the functions/objects of pictures that will be returned once this function is over
         print("Loading Pictures...")
         for Img in _ImgNames: #Loop over all the name of pictures
@@ -166,9 +193,9 @@ class PSRLS(tk.Frame):
             file.close()
 
 if __name__ == "__main__":
-    root = tk.Tk() #sets up the window and root
+    root = tk.Tk("Main", "Rock, Paper, Scissors, and the Bang") #sets up the window and root
     root.maxsize(960,800) #sets the windows maxsize to 960x800
     root.minsize(960,800) #sets the windows minsize to 960x800
     root.title("Rock, Paper, Scissors, and the Bang") #set the title of the program
-    PSRLS(root).pack( fill="both", expand=True) #calles the Paper, Scissors, Rock, Lizard and Spock class and then packs it
+    PSRLS(root).pack(fill="both", expand=True) #calles the Paper, Scissors, Rock, Lizard and Spock class and then packs it
     root.mainloop() #runs a mainloop for the root file
