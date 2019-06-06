@@ -16,20 +16,56 @@ self.Parent.Parent.pack_forget() <- restart the view
 """
 Moves =  ["Rock","Paper","Scissors", "Spock", "Lizard"] # make a Global list of moves
 default_colour = "#fc752b"
+default_key = ["1","2","3","4","5"]
 
-class Settings(tk.Tk):
+
+class Settings(tk.Toplevel): #<-- must use tk.Toplevel and not tk.Tk()
     def __init__(self, parent):
-        tk.Tk.__init__(self, "Settings", "Settings")
+        tk.Toplevel.__init__(self, parent, bg=default_colour) #<-- can't use tk.Tk() again or the tk.StringVar() won't work!
         self.title("Settings") #set the title of the window
-        self.maxsize(960,800) #sets the windows maxsize to 960x800
-        self.minsize(960,800) #sets the windows minsize to 960x800
+        self.maxsize(480,800) #sets the windows maxsize to 960x800
         self.Parent = parent
-        self.protocol("WM_DELETE_WINDOW", self.Exit)
-    def Exit(self):
+        self.keybinds = [self.keybind_setting(self,i) for i in range(0,5)]
+        self.Reset_Keybinds = tk.Button(self, text="Reset Keybinds",font=("Calibri",20),bg="#ff9961", command=self.reset_keybinds)
+        self.Reset_Data = tk.Button(self, text="Reset Data",font=("Calibri",20),bg="#ff9961", command=self.Parent.Reset_Data)
+        self.Reset_Keybinds.grid(row=6, column=0, pady=(10,10), padx=(30,10))
+        self.Reset_Data.grid(row=6, column=1, pady=(10,10), padx=(10,30))
+        self.close_btn = tk.Button(self, text="Close",bg="#ff9961",font=("Calibri",20),command=self.close)
+        self.close_btn.grid(row=7, pady=(10,10), columnspan=2)
+        self.protocol("WM_DELETE_WINDOW", self.close)
+    def close(self):
         self.Parent.Session = 1
         self.destroy()
+    def reset_keybinds(self):
+        for i in range(0, 5):
+            self.keybinds[i].entry_text.set(default_key[i].upper())
+            self.Parent.Human.Buttons[i].ChangeKeybind(default_key[i].lower())
+    class keybind_setting():
+        def __init__(self,parent,index):
+            self.Parent = parent
+            self.index = index
+            self.keybind = self.Parent.Parent.Human.Buttons[self.index].keybind
+            tk.Label(parent,bg=default_colour, text=Moves[index],font=("Calibri",40), width=6).grid(row=index, column=0, padx=(30, 10), pady=(5,5))
+            self.entry_text = tk.StringVar() # the text in  your entry
+            self.entry_text.set(self.keybind.upper())
+            self.entry = tk.Entry(parent,width = 6,textvariable=self.entry_text,justify='center',bg="#ff9961",font=("Calibri",40))
+            self.entry.grid(row=index, column=1, padx=(10,30), pady=(5,5)) # the entry
+            self.entry_text.trace("w", self.character_limit)
+            #self.entry_text.set("Test") <-- Trace pick this up!!!!
+        def character_limit(self,x,y,z):
+            if len(self.entry_text.get()) > 0:
+                self.entry_text.set(self.entry_text.get()[-1].upper())
+                self.Parent.Parent.Human.Buttons[self.index].ChangeKeybind(self.entry_text.get().lower())
+            if self.entry_text.get() == "":
+                self.Parent.Parent.Human.Buttons[self.index].ChangeKeybind(default_key[self.index])
+            for i in self.Parent.keybinds:
+                if i.keybind == self.entry_text.get() and self.entry_text.get() != "":
+                    i.entry_text.set(self.keybind)
+                    self.Parent.Parent.Human.Buttons[i.index].ChangeKeybind(self.keybind.lower())
+            self.keybind = self.entry_text.get() if self.entry_text.get() != "" else default_key[self.index]
 
-class Move(tk.Frame):
+
+class Move_Btn(tk.Frame):
     def __init__(self,parent,name,index, tall = 0, image=None, bind=None, Computer = False, *args, **kwargs):
         _colour = ["Brown","White","pink","green2","LightBlue1"]
         tk.Frame.__init__(self, parent.Parent,bg= _colour[index],width=50, *args, **kwargs) #Setup the main Frame (Class, root, background colour, width, [and any other arguments that could be called])
@@ -69,8 +105,10 @@ class Move(tk.Frame):
             self.config(relief="raised", bd=2,width=50) #this makes sure that its not configuring the relief to the same value as i had some problem when it did
 
     def ChangeKeybind(self,key):
-        self.bind = key
+        self.Parent.Parent.Parent.unbind(self.keybind)
+        self.keybind = key
         self.Parent.Parent.Parent.bind(self.keybind, self.Play)
+        self.Parent.Parent.update()
 
     def Play(self, Opposition):
         self.Tall.set(self.Tall.get()+1)
@@ -99,12 +137,12 @@ class Player(tk.Frame):
         self.wins = tk.IntVar()
         self.wins.set(wins)
         if binds and pictures:
-            self.Buttons = [Move(self, Moves[i], i, tall[i], pictures[i], binds[i]) for i in range(0,len(Moves))]
+            self.Buttons = [Move_Btn(self, Moves[i], i, tall[i], pictures[i], binds[i]) for i in range(0,len(Moves))]
             self.image.pack(fill="both", padx=(20,10),pady=(10,30))
             self.pack(padx=(0, 4), pady=(0, 8))
             self.Background.place(relx=0)
         else:
-            self.Buttons = [Move(self, Moves[i], i, tall[i], pictures[i]) for i in range(0,len(Moves))]
+            self.Buttons = [Move_Btn(self, Moves[i], i, tall[i], pictures[i]) for i in range(0,len(Moves))]
             self.image.pack(fill="both", padx=(10,20),pady=(30,10))
             self.pack(padx=(4, 0), pady=(8, 0))
             self.Background.place(rely=1, relx=0, anchor="sw")
@@ -131,7 +169,7 @@ class PSRLS(tk.Frame):
                 file.write("0,0,0,0,0\n") #First line is the amount of times the human clicks a move (the values are in the same order as the temperary move list eg first value '0' is refering to the 0th element in the move list which is "Rock")
                 file.write("0,0,0,0,0\n") #Second line is the amount of tume the computer clicks a move
                 file.write("0,0\n") #Third line is for the wins, first value is for the human wins and second value is the computers wins
-                file.write("1,2,3,4,5") #forth and final line is the keybind that the user/program has set, deflaut is 1,2,3,4,5 (the keybinds are in the same order as the temperary move list eg first value '1' is refering to the 0th element in the move list which is "Rock")
+                file.write(",".join(default_key)) #forth and final line is the keybind that the user/program has set, deflaut is 1,2,3,4,5 (the keybinds are in the same order as the temperary move list eg first value '1' is refering to the 0th element in the move list which is "Rock")
                 file.close() #closes the file
                 #Run Help window and wait
         with open("psrls.txt","r") as file: #opens the psrls file
@@ -155,6 +193,7 @@ class PSRLS(tk.Frame):
     def settings(self):
         if self.Session == 1:
             self.Session = Settings(self)
+            self.mainloop()
         else:
             messagebox.showerror("Session Error", "Either Help or Settings Page is alread open!")
 
@@ -165,7 +204,19 @@ class PSRLS(tk.Frame):
         while _Time > time.time():
             self.Parent.update()
         return self.Time == _Time
-
+    def Reset_Data(self):
+        with open("psrls.txt","w") as file:
+            file.write("0,0,0,0,0\n") #First line is the amount of times the human clicks a move (the values are in the same order as the temperary move list eg first value '0' is refering to the 0th element in the move list which is "Rock")
+            file.write("0,0,0,0,0\n") #Second line is the amount of tume the computer clicks a move
+            file.write("0,0\n") #Third line is for the wins, first value is for the human wins and second value is the computers wins
+            file.write(",".join([str(button.keybind) for button in self.Human.Buttons])) #forth and final line is the keybind that the user/program has set, deflaut is 1,2,3,4,5 (the keybinds are in the same order as the temperary move list eg first value '1' is refering to the 0th element in the move list which is "Rock")
+            file.close() #closes the file
+        [button.Tall.set(0) for button in self.Human.Buttons]
+        [button.Tall.set(0) for button in self.Computer.Buttons]
+        self.Human.wins.set(0)
+        self.Computer.wins.set(0)
+        self.Human.Background_Change(default_colour)
+        self.Computer.Background_Change(default_colour)
     def GetPictures(self):
         _ImgNames = Moves+["setting_icon","i_icon","Waiting"] #compinds two list together (List of moves, Other Pictures) to make a temperary variable for the names of pictures that need to be added
         _ImgObjects = [] #temperary variable for the functions/objects of pictures that will be returned once this function is over
