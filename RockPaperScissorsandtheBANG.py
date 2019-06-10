@@ -19,7 +19,7 @@ default_colour = "#fc752b"
 default_key = ["1","2","3","4","5"]
 
 
-class Settings(tk.Toplevel): #<-- must use tk.Toplevel and not tk.Tk()
+class Settings_Window(tk.Toplevel): #<-- must use tk.Toplevel and not tk.Tk()
     def __init__(self, parent):
         tk.Toplevel.__init__(self, parent, bg=default_colour) #<-- can't use tk.Tk() again or the tk.StringVar() won't work!
         self.title("Settings") #set the title of the window
@@ -64,6 +64,23 @@ class Settings(tk.Toplevel): #<-- must use tk.Toplevel and not tk.Tk()
                     self.Parent.Parent.Human.Buttons[i.index].ChangeKeybind(self.keybind.lower())
             self.keybind = self.entry_text.get() if self.entry_text.get() != "" else default_key[self.index]
 
+class Help_Window(tk.Toplevel):
+    def __init__(self,parent):
+        tk.Toplevel.__init__(self, parent)
+        self.title("Help") #set the title of the window
+        self.maxsize(960,800) #sets the windows maxsize to 960x800
+        self.minsize(960,800)
+        self.Parent = parent
+        self.keybind = tk.Frame(self)
+        self.Instructions = tk.Frame(self)
+        self.protocol("WM_DELETE_WINDOW", self.close)
+        [tk.Label(self.keybind, text=Moves[move.index], font=("Calibri",40)).grid(row=move.index, column=0) for move in self.Parent.Human.Buttons]
+        [tk.Label(self.keybind, text=move.keybind.upper(), font=("Calibri",40)).grid(row=move.index, column=1) for move in self.Parent.Human.Buttons]
+        self.keybind.grid(row=0, column=0)
+        self.keybind.grid(row=0, column=1)
+    def close(self):
+        self.Parent.Session = 1
+        self.destroy()
 
 class Move_Btn(tk.Frame):
     def __init__(self,parent,name,index, tall = 0, image=None, bind=None, Computer = False, *args, **kwargs):
@@ -183,8 +200,9 @@ class PSRLS(tk.Frame):
         self.Human = Player(PlayersFrame,self,"Human", _humtall, _wins[0], _pictures, _binds)
         self.Computer = Player(PlayersFrame,self,"Computer", _comtall, _wins[0], pictures=_pictures)
         self.settingbtn = tk.Button(self, image=self.Global_Pictures[0], command=self.settings, width=60, height=60)
-        self.helpbtn = tk.Button(self, image=self.Global_Pictures[1])
+        self.helpbtn = tk.Button(self, image=self.Global_Pictures[1],  command=self.help, width=60, height=60)
         self.settingbtn.place(relx=0.05, y=100)
+        self.helpbtn.place(relx=0.95, y=100, anchor="ne")
         PlayersFrame.place(relx=0.5, rely=0.5, anchor='center')
     def Exit(self):
         if  self.Session != 1:
@@ -192,8 +210,12 @@ class PSRLS(tk.Frame):
         self.Parent.destroy()
     def settings(self):
         if self.Session == 1:
-            self.Session = Settings(self)
-            self.mainloop()
+            self.Session = Settings_Window(self)
+        else:
+            messagebox.showerror("Session Error", "Either Help or Settings Page is alread open!")
+    def help(self):
+        if self.Session == 1:
+            self.Session = Help_Window(self)
         else:
             messagebox.showerror("Session Error", "Either Help or Settings Page is alread open!")
 
