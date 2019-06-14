@@ -11,14 +11,10 @@ except:
     print("You may need to install this library for the game to load pictures, use:")
     print("     python -m pip install Pillow")
     print("to install")
-"""
-self.Parent.Parent.pack_forget() <- restart the view
-"""
+
 Moves =  ["Rock","Paper","Scissors", "Spock", "Lizard"] # make a Global list of moves
-default_colour = "#fc752b"
-default_key = ["1","2","3","4","5"]
-
-
+default_colour = "#fc752b" #Default orange background
+default_key = ["1","2","3","4","5"] #Defualt Keybinds
 class Settings_Window(tk.Toplevel): #<-- must use tk.Toplevel and not tk.Tk()
     def __init__(self, parent):
         tk.Toplevel.__init__(self, parent, bg=default_colour) #<-- can't use tk.Tk() again or the tk.StringVar() won't work!
@@ -66,18 +62,47 @@ class Settings_Window(tk.Toplevel): #<-- must use tk.Toplevel and not tk.Tk()
 
 class Help_Window(tk.Toplevel):
     def __init__(self,parent):
-        tk.Toplevel.__init__(self, parent)
-        self.title("Help") #set the title of the window
+        tk.Toplevel.__init__(self, parent, bg=default_colour)
+        self.title("Instructions") #set the title of the window
         self.maxsize(960,800) #sets the windows maxsize to 960x800
         self.minsize(960,800)
+        Title = tk.Label(self, text="Instructions", font=("Calibri",40), bg=default_colour)
+        Title.grid(row=0)
         self.Parent = parent
-        self.keybind = tk.Frame(self)
-        self.Instructions = tk.Frame(self)
+        self.keybind = tk.Frame(self, relief='sunken',bd=2, bg= default_colour)
+        self.Rules = tk.Frame(self, relief='sunken',bd=2, bg= default_colour)
+        tk.Label(self.keybind, text="KeyBinds",  bg=default_colour,font=("Calibri",28)).grid(row=0,column=0, columnspan=2)
+        tk.Label(self.Rules, text="Rules",  bg=default_colour,font=("Calibri",28)).grid(row=0,column=0)
         self.protocol("WM_DELETE_WINDOW", self.close)
-        [tk.Label(self.keybind, text=Moves[move.index], font=("Calibri",40)).grid(row=move.index, column=0) for move in self.Parent.Human.Buttons]
-        [tk.Label(self.keybind, text=move.keybind.upper(), font=("Calibri",40)).grid(row=move.index, column=1) for move in self.Parent.Human.Buttons]
-        self.keybind.grid(row=0, column=0)
-        self.keybind.grid(row=0, column=1)
+        try:
+            for move in self.Parent.Human.Buttons:
+                tk.Label(self.keybind, text=Moves[move.index],justify='center', font=("Calibri",40), bg=default_colour).grid(row=move.index+1, column=0, sticky="nswe", padx=(10,10), pady=(5,5))
+                tk.Label(self.keybind, text=move.keybind.upper(),justify='center', font=("Calibri",40), bg=default_colour).grid(row=move.index+1, column=1, sticky="nswe", padx=(10,10), pady=(5,5))
+                tk.Label(self.Rules, text=Moves[move.index],justify='center', font=("Calibri",28), bg=default_colour, relief="raised", width=7).grid(row=move.index+1, column=0, sticky="nswe", padx=(10,10), pady=(5,5))
+                tk.Label(self.Rules, text="wins against",justify='center', font=("Calibri",28), bg=default_colour).grid(row=move.index+1, column=1, sticky="nswe", pady=(5,5))
+                wins = [Moves[move2] for move2 in range(0,5) if ((len(Moves) + move.index - move2)%len(Moves)%2)]
+                tk.Label(self.Rules, text=wins[0],justify='center', font=("Calibri",28), bg=default_colour, relief="raised", width=7).grid(row=move.index+1, column=2, sticky="nswe", padx=(10,10), pady=(5,5))
+                tk.Label(self.Rules, text=wins[1],justify='center', font=("Calibri",28), bg=default_colour, relief="raised", width=7).grid(row=move.index+1, column=3, sticky="nswe", padx=(10,10), pady=(5,5))
+        except:
+            Title.config(text="Welcome")
+            for move in range(0,5):
+                tk.Label(self.keybind, text=Moves[move],justify='center', font=("Calibri",40), bg=default_colour).grid(row=move+1, column=0, sticky="nswe", padx=(10,10), pady=(5,5))
+                tk.Label(self.keybind, text=default_key[move],justify='center', font=("Calibri",40), bg=default_colour).grid(row=move+1, column=1, sticky="nswe", padx=(10,10), pady=(5,5))
+                tk.Label(self.Rules, text=Moves[move],justify='center', font=("Calibri",28), relief="raised", bg=default_colour, width=7).grid(row=move+1, column=0, sticky="nswe", padx=(10,10), pady=(5,5))
+                tk.Label(self.Rules, text="wins against",justify='center', font=("Calibri",28), bg=default_colour).grid(row=move+1, column=1, sticky="nswe", pady=(5,5))
+                wins = [Moves[move2] for move2 in range(0,5) if ((len(Moves) + move - move2)%len(Moves)%2)]
+                tk.Label(self.Rules, text=wins[0],justify='center', font=("Calibri",28), relief="raised", bg=default_colour, width=7).grid(row=move+1, column=2, sticky="nswe", padx=(10,10), pady=(5,5))
+                tk.Label(self.Rules, text=wins[1],justify='center', font=("Calibri",28), relief="raised", bg=default_colour, width=7).grid(row=move+1, column=3, sticky="nswe", padx=(10,10), pady=(5,5))
+        self.keybind.grid(rowspan=2, row=1, column=0, padx=(10,10))
+        self.Rules.grid(row=1, column=1, padx=(10,10))
+        self.Intructions = tk.Text(self, bd=2,font=("Calibri",19), width=46, height=10, bg=default_colour)
+        self.Intructions.grid(rowspan=2,row=2, column=1, pady=(10,10))
+        self.Intructions.insert(tk.END, "Instructions\nThe game is an expansion on the game Rock, Paper,\nScissors. Each player picks a variable and reveals it at the\nsame time. The winner is the one who defeats the others.\nTo Play/Pick a Move you must either use the set keybind\nfor the Move or click the Moves Button, the background\nalternates green or red depeneded on if you win or lose\nagainst the computer. The numbers under the moves\nshow the number of times in which that move has been\nused.")
+        self.Intructions.config(state="disabled")
+        self.close_btn = tk.Button(self, text="Close",bg="#ff9961",font=("Calibri",20),command=self.close)
+        self.close_btn.grid(row=3,column=0, pady=(10,10))
+        self.keybind.grid_columnconfigure(0, weight=1)
+        self.keybind.grid_columnconfigure(1, weight=1)
     def close(self):
         self.Parent.Session = 1
         self.destroy()
@@ -144,101 +169,112 @@ class Move_Btn(tk.Frame):
 
 class Player(tk.Frame):
     def __init__(self, frame, parent, name, tall, wins, pictures=None,binds=None, *args, **kwargs):
-        self.Border = tk.Frame(frame, background="#ff9961", bd=0, highlightthickness=0)
-        tk.Frame.__init__(self, self.Border, bg=default_colour, *args, **kwargs) #Setup the main Frame (Class, root, [and any other arguments that could be called])
-        self.Name = name
-        self.Parent = parent
+        self.Border = tk.Frame(frame, background="#ff9961", bd=0, highlightthickness=0) #sets up a Frame to act like a Border and set the background colour to the wanted colour
+        tk.Frame.__init__(self, self.Border, bg=default_colour, *args, **kwargs) #Setup the main Frame inside the border frame then packed with padding showing the desired border (this methord is used as tkinter adds a border on each side and we want it to only show on only some sides and not all of them)
+        self.Name = name #sets class variable for the name
+        self.Parent = parent # sets class variable for the Parent
         self.Background = tk.Label(parent,bg=default_colour, height=20, width=960)
         self.Background.lower(self.Border)
         self.image = tk.Label(self, image=parent.Global_Pictures[2], width=446, height=396, bg="#00d0d4") #IMAGE SHOULD BE 450X400
         self.wins = tk.IntVar()
         self.wins.set(wins)
+        self.WinLbl = tk.Label(self.Parent, textvariable=self.wins,font=("Calibri",20),bg=default_colour)
+        self.NameLbl = tk.Label(self.Parent, text=self.Name, font=("Calibri",20),bg=default_colour)
         if binds and pictures:
             self.Buttons = [Move_Btn(self, Moves[i], i, tall[i], pictures[i], binds[i]) for i in range(0,len(Moves))]
             self.image.pack(fill="both", padx=(20,10),pady=(10,30))
             self.pack(padx=(0, 4), pady=(0, 8))
             self.Background.place(relx=0)
+            self.NameLbl.place(y=110, relx=0.5, anchor="center")
+            self.WinLbl.place(y=150, relx=0.5, anchor="center")
         else:
             self.Buttons = [Move_Btn(self, Moves[i], i, tall[i], pictures[i]) for i in range(0,len(Moves))]
             self.image.pack(fill="both", padx=(10,20),pady=(30,10))
             self.pack(padx=(4, 0), pady=(8, 0))
             self.Background.place(rely=1, relx=0, anchor="sw")
-
+            self.NameLbl.place(rely=1,y=-110, relx=0.5, anchor="center")
+            self.WinLbl.place(rely=1,y=-150, relx=0.5, anchor="center")
         #setup the display feilds
         self.pack()
         self.Border.pack(side="left")
 
     def Background_Change(self,colour="#fc752b"):
-        self.Background.config(bg=colour)
-        self.config(bg=colour)
+        self.Background.config(bg=colour) #set the Background of the Buttons to colour
+        self.config(bg=colour) #set the Background of the Players frame to colour
+        self.NameLbl.config(bg=colour)
+        self.WinLbl.config(bg=colour)
         pass
 
 class PSRLS(tk.Frame):
     def __init__(self,parent,*args, **kwargs):
         tk.Frame.__init__(self, parent,*args, **kwargs) #Setup the main Frame (Class, root, [and any other arguments that could be called])
         self.Parent = parent # sets the root from where this class is being run from to self.parent
-        self.Time = 0 # Sets self.time for the wait function to 0
-        self.Session = 1
+        self.Time = 0 #Sets self.time for the wait function to 0
+        self.Session = 1 #sets variable called Session to 1 so that the program knows if either the help or setting window is open if not then this variable should be set to 1
         self.Parent.protocol("WM_DELETE_WINDOW", self.Exit)
         if not "psrls.txt" in os.listdir(): #Check in the psrls file is in the programs directory
-            #if it isn't then it makes the file
+            #if it isn't then it makes the file and assumes that this is the first time being run therefore the program will open the help window
+            self.Parent.withdraw() #hides the main root window so only the help_window show
+            self.Session = Help_Window(self) #call the help_window and set this class to self.session
+            while self.Session != 1: #loops intill the help window closes
+                self.Parent.update()
+            self.Parent.deiconify() #Shows the root window after the closer of the help_window
             with open("psrls.txt","w") as file:
                 file.write("0,0,0,0,0\n") #First line is the amount of times the human clicks a move (the values are in the same order as the temperary move list eg first value '0' is refering to the 0th element in the move list which is "Rock")
                 file.write("0,0,0,0,0\n") #Second line is the amount of tume the computer clicks a move
                 file.write("0,0\n") #Third line is for the wins, first value is for the human wins and second value is the computers wins
                 file.write(",".join(default_key)) #forth and final line is the keybind that the user/program has set, deflaut is 1,2,3,4,5 (the keybinds are in the same order as the temperary move list eg first value '1' is refering to the 0th element in the move list which is "Rock")
-                file.close() #closes the file
-                #Run Help window and wait
+                file.close() #Closes the file so that it can be reopen in a later on in the program
         with open("psrls.txt","r") as file: #opens the psrls file
             file = file.readlines() #places the lines into a list
-            _humtall = [int(tall) for tall in file[0].strip().split(",")] #graps the first line and puts into a list of humtall (these are temperary variables)
-            _comtall = [int(tall) for tall in file[1].strip().split(",")] #graps the second line and puts into a list of comtall (these are temperary variables)
+            _humtall = [int(tall) for tall in file[0].strip().split(",")] #graps the first line and puts into a list of humtall (these are temperary variables of the number of time this move has been played)
+            _comtall = [int(tall) for tall in file[1].strip().split(",")] #graps the second line and puts into a list of comtall (these are temperary variables of the number of time this move has been played)
             _wins = file[2].strip().split(",") #make a list out of the third line and set it to a temperary varibale
             _binds = file[3].strip().split(",") #sets the last line to a temperary variable of binds
         _pictures, self.Global_Pictures = self.GetPictures() #calls a class function of GetPictures which will either grab the pictures from the local directory or from the internet (my github repository) and return two list on of the moves pictures and the other of the Global Pictures
-        PlayersFrame = tk.Frame(self)
-        self.Human = Player(PlayersFrame,self,"Human", _humtall, _wins[0], _pictures, _binds)
-        self.Computer = Player(PlayersFrame,self,"Computer", _comtall, _wins[0], pictures=_pictures)
-        self.settingbtn = tk.Button(self, image=self.Global_Pictures[0], command=self.settings, width=60, height=60)
-        self.helpbtn = tk.Button(self, image=self.Global_Pictures[1],  command=self.help, width=60, height=60)
-        self.settingbtn.place(relx=0.05, y=100)
-        self.helpbtn.place(relx=0.95, y=100, anchor="ne")
-        PlayersFrame.place(relx=0.5, rely=0.5, anchor='center')
+        PlayersFrame = tk.Frame(self) #sets up frame to contain the Human and Computers Classes
+        self.Human = Player(PlayersFrame,self,"Human", _humtall, _wins[0], _pictures, _binds) #Calls the player function with values for the computer class
+        self.Computer = Player(PlayersFrame,self,"Computer", _comtall, _wins[0], _pictures) #Calls the player function with values for the computer class
+        self.settingbtn = tk.Button(self, image=self.Global_Pictures[0], command=self.settings, width=60, height=60) #sets up a button to open the settings window
+        self.helpbtn = tk.Button(self, image=self.Global_Pictures[1],  command=self.help, width=60, height=60) #sets up a button to open the help window
+        self.settingbtn.place(relx=0.05, x=10, y=130,  anchor="center") #Places the settings btn
+        self.helpbtn.place(relx=0.95,x=-10, y=130,  anchor="center") #Places the help btn
+        PlayersFrame.place(relx=0.5, rely=0.5, anchor='center') #places the Frame containing the Human's and Computer's Classes
     def Exit(self):
-        if  self.Session != 1:
-            self.Session.destroy()
-        self.Parent.destroy()
+        if self.Session != 1: #if the self.Session isn't 1 and is set to the one of the windows
+            self.Session.destroy() #Destroy the open window
+        self.Parent.destroy() #Destroy the Main window
+
     def settings(self):
-        if self.Session == 1:
-            self.Session = Settings_Window(self)
+        if self.Session == 1: #if self.session is 1
+            self.Session = Settings_Window(self) #call the settings_window and set this class to self.session
         else:
-            messagebox.showerror("Session Error", "Either Help or Settings Page is alread open!")
+            messagebox.showerror("Session Error", "Either Help or Settings Window is alread open!") #else show an error expaining to the user that either the setting or help window is open
     def help(self):
-        if self.Session == 1:
-            self.Session = Help_Window(self)
+        if self.Session == 1: #if self.session is 1
+            self.Session = Help_Window(self) #call the Help_Window and set this class to self.session
         else:
-            messagebox.showerror("Session Error", "Either Help or Settings Page is alread open!")
+            messagebox.showerror("Session Error", "Either Help or Settings Window is alread open!") #else show an error expaining to the user that either the setting or help window is open
 
     def Wait(self, t):
-        _Time = time.time() + t
-        self.Time = time.time() + t
-
-        while _Time > time.time():
-            self.Parent.update()
-        return self.Time == _Time
+        _Time = time.time() + t #Sets a local variable only acceptable inside this function to the time.time() plus the number of seconds
+        self.Time = time.time() + t #sets the class value called Time to the value of time.time() plus the number of seconds
+        while _Time > time.time(): #loops intil the new time.time() is bigger than the local time variable
+            self.Parent.update() #Updates the tk root class
+        return self.Time == _Time #send back a bool depended on if the local time variable is equal to the class variable
     def Reset_Data(self):
-        with open("psrls.txt","w") as file:
+        with open("psrls.txt","w") as file: #overwrites the original file
             file.write("0,0,0,0,0\n") #First line is the amount of times the human clicks a move (the values are in the same order as the temperary move list eg first value '0' is refering to the 0th element in the move list which is "Rock")
             file.write("0,0,0,0,0\n") #Second line is the amount of tume the computer clicks a move
             file.write("0,0\n") #Third line is for the wins, first value is for the human wins and second value is the computers wins
             file.write(",".join([str(button.keybind) for button in self.Human.Buttons])) #forth and final line is the keybind that the user/program has set, deflaut is 1,2,3,4,5 (the keybinds are in the same order as the temperary move list eg first value '1' is refering to the 0th element in the move list which is "Rock")
-            file.close() #closes the file
+            file.close() #Closes the file so that it can be reopen in a later on in the program
         [button.Tall.set(0) for button in self.Human.Buttons]
-        [button.Tall.set(0) for button in self.Computer.Buttons]
-        self.Human.wins.set(0)
-        self.Computer.wins.set(0)
-        self.Human.Background_Change(default_colour)
-        self.Computer.Background_Change(default_colour)
+        [button.Tall.set(0) for button in self.Computer.Buttons] #Sets all button's values for the number of plays
+        self.Human.wins.set(0) #set the winning value for human to 0
+        self.Computer.wins.set(0) #set the winning value for human to 0
+        self.Human.Background_Change()
+        self.Computer.Background_Change() #resets the background tot he default_colour
     def GetPictures(self):
         _ImgNames = Moves+["setting_icon","i_icon","Waiting"] #compinds two list together (List of moves, Other Pictures) to make a temperary variable for the names of pictures that need to be added
         _ImgObjects = [] #temperary variable for the functions/objects of pictures that will be returned once this function is over
@@ -256,14 +292,13 @@ class PSRLS(tk.Frame):
                     print("Failed to load",Img+".png") #also when it time to display these images the program will note that the picture failed to load and will display text instead of the img
         print("Finished Loading pictures")
         return _ImgObjects[:-3], _ImgObjects[-3:]  #returns the ImgObjects
-
     def update(self):
         with open("psrls.txt","w") as file:
-            file.write(",".join([str(button.Tall.get()) for button in self.Human.Buttons])+"\n")
-            file.write(",".join([str(button.Tall.get()) for button in self.Computer.Buttons])+"\n")
-            file.write(str(self.Human.wins.get())+","+str(self.Computer.wins.get())+"\n")
-            file.write(",".join([str(button.keybind) for button in self.Human.Buttons]))
-            file.close()
+            file.write(",".join([str(button.Tall.get()) for button in self.Human.Buttons])+"\n") #Collects the number of plays from the Humans buttons and writes it to the file
+            file.write(",".join([str(button.Tall.get()) for button in self.Computer.Buttons])+"\n") #Collects the number of plays from the Computers buttons and writes it to the file
+            file.write(str(self.Human.wins.get())+","+str(self.Computer.wins.get())+"\n") #Collects the wins from the Human's and computer's win variable and writes it to the file
+            file.write(",".join([str(button.keybind) for button in self.Human.Buttons])) #Grabs the keybinds values from the Human's Button and writes it to the file
+            file.close() #Closes the file so that it can be reopen in a later on in the program #Closes the file so that it can be reopen in a later on in the program and writes it to the file
 
 if __name__ == "__main__":
     root = tk.Tk("Main", "Rock, Paper, Scissors, and the Bang") #sets up the window and root
