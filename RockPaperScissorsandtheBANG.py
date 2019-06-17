@@ -165,6 +165,8 @@ class Move_Btn(tk.Frame):
             if self.Parent.Parent.Wait(5):
                 self.Parent.Background_Change()
                 self.Parent.Parent.Computer.Background_Change()
+                self.Parent.image.config(image=self.Parent.Parent.Global_Pictures[2])
+                self.Parent.Parent.Computer.image.config(image=self.Parent.Parent.Global_Pictures[2])
 
 
 class Player(tk.Frame):
